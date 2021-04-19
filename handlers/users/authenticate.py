@@ -1,9 +1,11 @@
 from aiogram.types import Message
 from aiogram.types import CallbackQuery
+from aiogram.dispatcher.dispatcher import FSMContext
 
 from keyboards.inline.category import category_keyboard
 from keyboards.inline.category import scholar_class_keyboard
 from keyboards.default.basic import basic_keyboard
+from states import ScholarClassState
 from decorators import log, unauth
 from loader import dp, sql
 
@@ -17,6 +19,7 @@ async def authenticate(message: Message):
 @log('Попытка авторизации', 'школьник')
 @unauth
 async def set_scholar(call: CallbackQuery):
+    await ScholarClassState.class_.set()
     await call.message.delete()
     await call.message.answer('<b>Выберите класс:</b>', reply_markup=scholar_class_keyboard)
 
@@ -50,7 +53,7 @@ async def set_adult(call: CallbackQuery):
     await call.answer("Вы авторизовались как 'Родитель'")
 
 
-@dp.callback_query_handler(lambda call: call.data.isdigit() and int(call.data) in range(1,10), state=Scholar)
+@dp.callback_query_handler(lambda call: call.data.isdigit() and int(call.data) in range(1,10))
 @unauth
 async def scholar_auth(call: CallbackQuery):
     await call.message.delete()
@@ -61,4 +64,5 @@ async def scholar_auth(call: CallbackQuery):
     sql.insert_data('scholar', username, user_id, 'Null', class_)
     await call.message.answer(f"Вы авторизовались как 'Ученик' {call.data} класса", reply_markup=basic_keyboard)
     await call.answer("Вы авторизовались как 'Ученик'")
+
 
